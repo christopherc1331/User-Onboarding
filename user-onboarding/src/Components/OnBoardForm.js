@@ -1,8 +1,18 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { withFormik, Form, Field } from "formik";
 import * as Yup from "yup";
+import axios from "axios";
 
-const OnBoardForm = ({ errors, touched, values }) => {
+const OnBoardForm = ({ errors, touched, values, status }) => {
+  const [user, setUser] = useState([]);
+
+  useEffect(() => {
+    if (status) {
+      setUser([...user, status]);
+      console.log(user);
+    }
+  }, [status]);
+
   return (
     <Form>
       <Field name="name" placeholder="Name" />
@@ -22,6 +32,7 @@ const OnBoardForm = ({ errors, touched, values }) => {
       {touched.termsCheck && errors.termsCheck && (
         <p className="errors">{errors.termsCheck}</p>
       )}
+
       <Field name="favBug" component="select">
         <option>Select favorite bug</option>
         <option value="Hornet">Hornet</option>
@@ -32,6 +43,12 @@ const OnBoardForm = ({ errors, touched, values }) => {
       {touched.favBug && errors.favBug && (
         <p className="errors">{errors.favBug}</p>
       )}
+
+      {user.map(item => (
+        <div>
+          <p key={item.id}>{item.name}</p>
+        </div>
+      ))}
 
       <button>Submit!</button>
     </Form>
@@ -61,8 +78,17 @@ const FormikLoginForm = withFormik({
     favBug: Yup.string().required("Choose a bug")
   }),
 
-  handleSubmit(values) {
-    console.log(values);
+  handleSubmit(values, { setStatus, resetForm }) {
+    axios
+      .post("https://reqres.in/api/users", values)
+      .then(result => {
+        console.log("handleSubmit: ", result);
+        setStatus(result.data);
+        resetForm();
+      })
+      .catch(err => {
+        console.log("handleSubmit: ", err);
+      });
   }
 })(OnBoardForm);
 
